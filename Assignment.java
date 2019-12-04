@@ -72,25 +72,19 @@ public static void option2(Connection conn, int[] productIDs, int[] quantities, 
 
 		try {
 
-			String insertCollections = "INSERT INTO COLLECTIONS" +
-			                           " (OrderID, FName, LName, CollectionDate) VALUES (order_seq.currval, ?, ?, ?)";
+			String insertCollections = "INSERT INTO COLLECTIONS " +
+			                           "(OrderID, FName, LName, CollectionDate) VALUES (order_seq.currval, ?, ?, ?)";
 
 			ps = conn.prepareStatement(insertCollections);
 
 			ps.setString(1, fName);
 			ps.setString(2, LName);
-			ps.setDate(3, new java.sql.Date(dateFormat.parse(collectionDate).getTime()));
+			ps.setDate(3, new Date(dateFormat.parse(collectionDate).getTime()));
 
 			ps.executeUpdate();
 
 		} catch (SQLException e) {
 			System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
-			System.out.println("Rolling back data...");
-			try {
-				if (conn != null) conn.rollback();
-			} catch (SQLException e2) {
-				System.err.format("SQL State: %s\n%s", e2.getSQLState(), e2.getMessage());
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -142,8 +136,8 @@ public static void option3(Connection conn, int[] productIDs, int[] quantities, 
 
 		try {
 
-			String insertDeliveries = "INSERT INTO DELIVERIES" +
-			                          " (OrderID, FName, LName, House, Street, City, DeliveryDate) VALUES (order_seq.currval, ?, ?, ?, ?, ?, ?)";
+			String insertDeliveries = "INSERT INTO DELIVERIES " +
+			                          "(OrderID, FName, LName, House, Street, City, DeliveryDate) VALUES (order_seq.currval, ?, ?, ?, ?, ?, ?)";
 
 			ps = conn.prepareStatement(insertDeliveries);
 
@@ -152,18 +146,12 @@ public static void option3(Connection conn, int[] productIDs, int[] quantities, 
 			ps.setString(3, house);
 			ps.setString(4, street);
 			ps.setString(5, city);
-			ps.setDate(6, new java.sql.Date(dateFormat.parse(deliveryDate).getTime()));
+			ps.setDate(6, new Date(dateFormat.parse(deliveryDate).getTime()));
 
 			ps.executeUpdate();
 
 		} catch (SQLException e) {
 			System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
-			System.out.println("Rolling back data...");
-			try {
-				if (conn != null) conn.rollback();
-			} catch (SQLException e2) {
-				System.err.format("SQL State: %s\n%s", e2.getSQLState(), e2.getMessage());
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -201,7 +189,7 @@ public static boolean purchases(Connection conn, int[] productIDs, int[] quantit
 
 			ps.setString(1, orderType);
 			ps.setInt(2, orderCompleted);
-			ps.setDate(3, new java.sql.Date(dateFormat.parse(orderDate).getTime()));
+			ps.setDate(3, new Date(dateFormat.parse(orderDate).getTime()));
 
 			ps.executeUpdate();
 
@@ -222,8 +210,8 @@ public static boolean purchases(Connection conn, int[] productIDs, int[] quantit
 				}
 			}
 
-			String insertStaff_Orders = "INSERT INTO STAFF_ORDERS" +
-			                            " (OrderID, StaffID) VALUES (order_seq.currval, ?)";
+			String insertStaff_Orders = "INSERT INTO STAFF_ORDERS " +
+			                            "(OrderID, StaffID) VALUES (order_seq.currval, ?)";
 
 			ps = conn.prepareStatement(insertStaff_Orders);
 
@@ -350,11 +338,11 @@ public static void option4(Connection conn) {
 	Statement s = null;
 	ResultSet rs = null;
 
-	String selectBiggestSellers = "SELECT ProductID, ProductDesc, sum(ProductQuantity * ProductPrice) TotalValueSold	"+
-	                              "FROM INVENTORY 																																		"+
-	                              "NATURAL JOIN ORDER_PRODUCTS																												"+
-	                              "GROUP BY ProductID, ProductDesc 																										"+
-	                              "ORDER BY TotalValueSold DESC																												";
+	String selectBiggestSellers = "SELECT ProductID, ProductDesc, sum(ProductQuantity * ProductPrice) TotalValueSold " +
+	                              "FROM INVENTORY " +
+	                              "NATURAL JOIN ORDER_PRODUCTS " +
+	                              "GROUP BY ProductID, ProductDesc " +
+	                              "ORDER BY TotalValueSold DESC";
 
 	try {
 
@@ -362,11 +350,18 @@ public static void option4(Connection conn) {
 
 		rs = s.executeQuery(selectBiggestSellers);
 
-		System.out.format("%-10s %-24s %-14s\n", "ProductID,", "ProductDesc,", "TotalValueSold");
+		if (rs.isBeforeFirst() ) {
 
-		while (rs.next()) {
-			System.out.format("%-10s %-24s £%13d\n", rs.getInt(1) + ",", rs.getString(2) + ",", rs.getInt(3));
-		}
+			System.out.format("%-10s %-24s %-14s\n", "ProductID,", "ProductDesc,", "TotalValueSold");
+
+			while (rs.next()) {
+				System.out.format("%-10s %-24s £%13d\n", rs.getInt(1) + ",", rs.getString(2) + ",", rs.getInt(3));
+			}
+
+		} else System.out.println("No Products in Inventory");
+
+
+
 
 	} catch (SQLException e) {
 		System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
@@ -396,12 +391,12 @@ public static void option5(Connection conn, String date) {
 	PreparedStatement ps = null;
 	ResultSet rs = null;
 
-	String selectLateCollections = "SELECT ProductID, ProductQuantity, OrderID	"+
-	                               "FROM ORDERS																	"+
-	                               "NATURAL JOIN COLLECTIONS	 									"+
-	                               "NATURAL JOIN ORDER_PRODUCTS 								"+
-	                               "NATURAL JOIN INVENTORY						 					"+
-	                               "WHERE CollectionDate + 8 <= ?							";
+	String selectLateCollections = "SELECT ProductID, ProductQuantity, OrderID " +
+	                               "FROM ORDERS " +
+	                               "NATURAL JOIN COLLECTIONS " +
+	                               "NATURAL JOIN ORDER_PRODUCTS " +
+	                               "NATURAL JOIN INVENTORY " +
+	                               "WHERE CollectionDate + 8 <= ?";
 
 	if (dateValidator(date)) {
 
@@ -412,7 +407,7 @@ public static void option5(Connection conn, String date) {
 
 			ps = conn.prepareStatement(selectLateCollections);
 
-			ps.setDate(1, new java.sql.Date(dateFormat.parse(date).getTime()));
+			ps.setDate(1, new Date(dateFormat.parse(date).getTime()));
 
 			rs = ps.executeQuery();
 
@@ -429,9 +424,9 @@ public static void option5(Connection conn, String date) {
 
 			}
 
-			String updateInventory = "UPDATE INVENTORY 																"+
-			                         "SET ProductStockAmount = ProductStockAmount + ? "+
-			                         "WHERE ProductID = ?															";
+			String updateInventory = "UPDATE INVENTORY " +
+			                         "SET ProductStockAmount = ProductStockAmount + ? " +
+			                         "WHERE ProductID = ?";
 
 			for (int i = 0; i < productIDs.size(); i++) {
 
@@ -444,10 +439,10 @@ public static void option5(Connection conn, String date) {
 
 			}
 
-			String deleteOrders1 = "DELETE FROM COLLECTIONS WHERE OrderID = ? 		";
-			String deleteOrders2 = "DELETE FROM STAFF_ORDERS WHERE OrderID = ? 		";
-			String deleteOrders3 = "DELETE FROM ORDER_PRODUCTS WHERE OrderID = ? 	";
-			String deleteOrders4 = "DELETE FROM ORDERS WHERE OrderID = ?					";
+			String deleteOrders1 = "DELETE FROM COLLECTIONS WHERE OrderID = ?";
+			String deleteOrders2 = "DELETE FROM STAFF_ORDERS WHERE OrderID = ?";
+			String deleteOrders3 = "DELETE FROM ORDER_PRODUCTS WHERE OrderID = ?";
+			String deleteOrders4 = "DELETE FROM ORDERS WHERE OrderID = ?";
 
 			for (int i = 0; i < orderIDs.size(); i++) {
 
@@ -513,13 +508,14 @@ public static void option6(Connection conn) {
 	Statement s = null;
 	ResultSet rs = null;
 
-	String selectBestStaff = "SELECT FName || ' ' || LName StaffName, sum(ProductPrice * ProductQuantity) TotalValueSold " +
-	                         "FROM INVENTORY 								"+
-	                         "NATURAL JOIN ORDER_PRODUCTS		"+
-	                         "NATURAL JOIN STAFF_ORDERS			"+
-	                         "NATURAL JOIN STAFF						"+
-	                         "GROUP BY FName, LName 				"+
-	                         "ORDER BY TotalValueSold DESC	";
+	String selectBestStaff = "SELECT FName || ' ' || LName StaffName, SUM(ProductPrice * ProductQuantity) TotalValueSold " +
+	                         "FROM INVENTORY " +
+	                         "NATURAL JOIN ORDER_PRODUCTS " +
+	                         "NATURAL JOIN STAFF_ORDERS	"+
+	                         "NATURAL JOIN STAFF " +
+	                         "GROUP BY FName, LName " +
+	                         "HAVING SUM(ProductPrice * ProductQuantity) >= 50000 " +
+	                         "ORDER BY TotalValueSold DESC";
 
 	try {
 
@@ -527,11 +523,15 @@ public static void option6(Connection conn) {
 
 		rs = s.executeQuery(selectBestStaff);
 
-		System.out.format("%-24s %-14s\n", "EmployeeName,", "TotalValueSold");
+		if (rs.isBeforeFirst() ) {
 
-		while (rs.next()) {
-			System.out.format("%-24s £%13d\n", rs.getString(1) + ",", rs.getInt(2));
-		}
+			System.out.format("%-24s %-14s\n", "EmployeeName,", "TotalValueSold");
+
+			while (rs.next()) {
+				System.out.format("%-24s £%13d\n", rs.getString(1) + ",", rs.getInt(2));
+			}
+
+		} else System.out.println("No Staff Member sold more than £50,000");
 
 	} catch (SQLException e) {
 		System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
@@ -559,14 +559,12 @@ public static void option7(Connection conn) {
 	PreparedStatement ps = null;
 	ResultSet rs = null;
 
-	String selectHighValProducts = "SELECT ProductID 																			"+
-	                               "FROM INVENTORY 																				"+
-	                               "NATURAL JOIN ORDER_PRODUCTS 													"+
-	                               "GROUP BY ProductID	 																	"+
-	                               "HAVING SUM(ProductQuantity * ProductPrice) >= 20000 	"+
-	                               "ORDER BY ProductID																		";
-
-	String call = "{call Staff_Contribution(?)}";
+	String selectHighValProducts = "SELECT ProductID " +
+	                               "FROM INVENTORY " +
+	                               "NATURAL JOIN ORDER_PRODUCTS " +
+	                               "GROUP BY ProductID " +
+	                               "HAVING SUM(ProductQuantity * ProductPrice) > 20000 " +
+	                               "ORDER BY ProductID";
 
 	try {
 
@@ -590,22 +588,22 @@ public static void option7(Connection conn) {
 
 			String selectProductPivot = "SELECT t.* " +
 			                            "FROM (SELECT * " +
-			                            "      FROM (SELECT StaffID, ProductID, ProductQuantity " +
+			                            "      FROM (SELECT FName || ' ' || LName StaffName, ProductID, ProductQuantity " +
 			                            "            FROM INVENTORY " +
 			                            "            NATURAL JOIN ORDER_PRODUCTS " +
 			                            "            NATURAL JOIN STAFF_ORDERS " +
 			                            "            NATURAL JOIN STAFF) " +
 			                            "      PIVOT (SUM(ProductQuantity) " +
-			                            "             FOR ProductID IN (1,2))) t " +
+			                            "             FOR ProductID IN (" + pivot_clause + "))) t " +
 			                            "INNER JOIN " +
-			                            "     (SELECT StaffID, sum(ProductPrice * ProductQuantity) TotalValueSold " +
+			                            "     (SELECT FName || ' ' || LName StaffName, sum(ProductPrice * ProductQuantity) TotalValueSold " +
 			                            "      FROM INVENTORY " +
 			                            "      NATURAL JOIN ORDER_PRODUCTS " +
 			                            "      NATURAL JOIN STAFF_ORDERS " +
 			                            "      NATURAL JOIN STAFF " +
-			                            "      GROUP BY StaffID, ProductID " +
-			                            "      HAVING sum(ProductPrice * ProductQuantity) >= 20000) t2 " +
-			                            "ON t.StaffID = t2.StaffID " +
+			                            "      GROUP BY FName, LName, ProductID " +
+			                            "      HAVING sum(ProductPrice * ProductQuantity) > 20000) t2 " +
+			                            "ON t.StaffName = t2.StaffName " +
 			                            "ORDER BY TotalValueSold DESC";
 
 			ps = conn.prepareStatement(selectProductPivot);
@@ -658,6 +656,59 @@ public static void option7(Connection conn) {
  * @param year The target year we match employee and product sales against
  */
 public static void option8(Connection conn, int year) {
+
+	PreparedStatement ps = null;
+	ResultSet rs = null;
+
+	String selectEmployees = "SELECT * " +
+	                         "FROM (SELECT FName || ' ' || LName StaffName " +
+	                         "			 FROM INVENTORY "+
+	                         "      NATURAL JOIN ORDER_PRODUCTS " +
+	                         "      NATURAL JOIN STAFF_ORDERS " +
+	                         "      NATURAL JOIN STAFF " +
+	                         "      NATURAL JOIN ORDERS " +
+	                         "      WHERE OrderPlaced >= ? AND OrderPlaced < ? " +
+	                         "      GROUP BY FName, LName " +
+	                         "      HAVING SUM(ProductQuantity * ProductPrice) >= 30000) " +
+	                         "NATURAL JOIN (SELECT FName || ' ' || LName StaffName " +
+	                         "      				 FROM INVENTORY "+
+	                         "      				 NATURAL JOIN ORDER_PRODUCTS "+
+	                         "      				 NATURAL JOIN STAFF_ORDERS "+
+	                         "      				 NATURAL JOIN STAFF "+
+	                         "      				 NATURAL JOIN ORDERS "+
+	                         "      				 WHERE OrderPlaced >= ? AND OrderPlaced < ? "+
+	                         "      				 GROUP BY ProductID, FName, LName "+
+	                         "      				 HAVING SUM(ProductQuantity * ProductPrice) > 20000) ";
+
+	try {
+
+		ps = conn.prepareStatement(selectEmployees);
+
+		ps.setDate(1, Date.valueOf(Integer.toString(year) + "-01-01"));
+		ps.setDate(2, Date.valueOf(Integer.toString(year + 1) + "-01-01"));
+		ps.setDate(3, Date.valueOf(Integer.toString(year) + "-01-01"));
+		ps.setDate(4, Date.valueOf(Integer.toString(year + 1) + "-01-01"));
+
+		rs = ps.executeQuery();
+
+		while (rs.next()) {
+			System.out.println(rs.getString(1));
+		}
+
+	} catch (SQLException e) {
+		System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
+	} catch (Exception e) {
+		e.printStackTrace();
+	} finally {
+		try {
+			if (ps != null) ps.close();
+			if (rs != null) rs.close();
+		} catch (SQLException e) {
+			System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
+		}
+	}
+
+
 
 }
 
@@ -726,9 +777,9 @@ public static void menu(Connection conn) {
 
 	String productID, quantity, orderDate, staffID, fName, lName;;
 
-	switch (option.charAt(0)) {
+	switch (option) {
 
-	case '1':
+	case "1":
 
 		do {
 
@@ -760,7 +811,7 @@ public static void menu(Connection conn) {
 
 		break;
 
-	case '2':
+	case "2":
 
 		String collectionDate;
 
@@ -807,7 +858,7 @@ public static void menu(Connection conn) {
 
 		break;
 
-	case '3':
+	case "3":
 
 		String deliveryDate, house, street, city;
 
@@ -866,13 +917,13 @@ public static void menu(Connection conn) {
 
 		break;
 
-	case '4':
+	case "4":
 
 		option4(conn);
 
 		break;
 
-	case '5':
+	case "5":
 
 		String chosenDate;
 
@@ -884,19 +935,19 @@ public static void menu(Connection conn) {
 
 		break;
 
-	case '6':
+	case "6":
 
 		option6(conn);
 
 		break;
 
-	case '7':
+	case "7":
 
 		option7(conn);
 
 		break;
 
-	case '8':
+	case "8":
 
 		String chosenYear;
 
@@ -908,7 +959,7 @@ public static void menu(Connection conn) {
 
 		break;
 
-	case 'q':
+	case "q":
 
 		break;
 
@@ -918,7 +969,7 @@ public static void menu(Connection conn) {
 
 	}
 
-	if (option.charAt(0) != 'q') {
+	if (!option.equals("q")) {
 
 		try {
 			Thread.sleep(1000);

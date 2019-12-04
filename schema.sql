@@ -183,6 +183,14 @@ BEGIN
 END;
 /
 
+CREATE OR REPLACE TRIGGER date_check
+  BEFORE
+  INSERT
+  ON COLLECTIONS
+  FOR EACH ROW
+END;
+/
+
 CREATE OR REPLACE PROCEDURE Staff_Contribution (rc OUT SYS_REFCURSOR) AS
   sql_s         CLOB;
   pivot_clause  CLOB;
@@ -217,44 +225,50 @@ INSERT INTO STAFF (StaffID, FName, LName)
 VALUES (2, 'Jack', 'McBride');
 
 INSERT INTO INVENTORY (ProductID, ProductDesc, ProductPrice, ProductStockAmount)
-VALUES (1, 'Socks', 25000, 20);
+VALUES (1, 'Socks', 20000, 100);
 INSERT INTO INVENTORY (ProductID, ProductDesc, ProductPrice, ProductStockAmount)
-VALUES (2, 'Gloves', 30000, 20);
+VALUES (2, 'Gloves', 25000, 100);
 INSERT INTO INVENTORY (ProductID, ProductDesc, ProductPrice, ProductStockAmount)
-VALUES (3, 'Trash', 1, 100);
+VALUES (3, 'Trash', 1000, 1000);
+INSERT INTO INVENTORY (ProductID, ProductDesc, ProductPrice, ProductStockAmount)
+VALUES (4, 'Garbage', 1000, 1000);
+INSERT INTO INVENTORY (ProductID, ProductDesc, ProductPrice, ProductStockAmount)
+VALUES (5, 'Rubbish', 1000, 1000);
 
 INSERT INTO ORDERS (OrderID, OrderType, OrderCompleted, OrderPlaced)
-VALUES (NULL, 'Collection', 0, '31-Jul-99');
+VALUES (NULL, 'Collection', 0, '31-Jul-98');
 INSERT INTO ORDERS (OrderID, OrderType, OrderCompleted, OrderPlaced)
 VALUES (NULL, 'Collection', 0, '30-Jul-99');
 INSERT INTO ORDERS (OrderID, OrderType, OrderCompleted, OrderPlaced)
 VALUES (NULL, 'Collection', 0, '29-Jul-99');
 INSERT INTO ORDERS (OrderID, OrderType, OrderCompleted, OrderPlaced)
-VALUES (NULL, 'Collection', 0, '28-Jul-99');
+VALUES (NULL, 'Collection', 0, '28-Jul-98');
 INSERT INTO ORDERS (OrderID, OrderType, OrderCompleted, OrderPlaced)
-VALUES (5, 'Collection', 0, '28-Jul-99');
+VALUES (5, 'Collection', 0, '20-Jul-99');
 INSERT INTO ORDERS (OrderID, OrderType, OrderCompleted, OrderPlaced)
 VALUES (NULL, 'Collection', 0, '28-Jul-99');
 
 INSERT INTO ORDER_PRODUCTS (OrderID, ProductID, ProductQuantity)
 VALUES (1, 1, 1);
 INSERT INTO ORDER_PRODUCTS (OrderID, ProductID, ProductQuantity)
-VALUES (2, 1, 2);
+VALUES (2, 3, 10);
 INSERT INTO ORDER_PRODUCTS (OrderID, ProductID, ProductQuantity)
-VALUES (3, 2, 3);
+VALUES (3, 2, 1);
 INSERT INTO ORDER_PRODUCTS (OrderID, ProductID, ProductQuantity)
-VALUES (4, 1, 4);
+VALUES (4, 2, 2);
 INSERT INTO ORDER_PRODUCTS (OrderID, ProductID, ProductQuantity)
-VALUES (5, 3, 10);
+VALUES (5, 4, 20);
+INSERT INTO ORDER_PRODUCTS (OrderID, ProductID, ProductQuantity)
+VALUES (6, 5, 10);
 
 INSERT INTO STAFF_ORDERS (StaffID, OrderID)
 VALUES (1, 1);
 INSERT INTO STAFF_ORDERS (StaffID, OrderID)
-VALUES (2, 2);
+VALUES (1, 2);
 INSERT INTO STAFF_ORDERS (StaffID, OrderID)
-VALUES (4, 3);
+VALUES (2, 3);
 INSERT INTO STAFF_ORDERS (StaffID, OrderID)
-VALUES (1, 4);
+VALUES (4, 4);
 INSERT INTO STAFF_ORDERS (StaffID, OrderID)
 VALUES (1, 5);
 
