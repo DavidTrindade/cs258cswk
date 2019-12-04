@@ -66,29 +66,13 @@ CREATE TABLE STAFF_ORDERS (
 DROP SEQUENCE order_seq;
 CREATE SEQUENCE order_seq start with 1;
 
-CREATE OR REPLACE TRIGGER order_ai
-  BEFORE
-  INSERT
-  ON ORDERS
-  FOR EACH ROW
-DECLARE
-  y INTEGER := order_seq.nextval;
-  x INTEGER := findID(y);
-BEGIN
-  IF :new.OrderID IS NULL THEN
-    WHILE (x IS NOT NULL)
-    LOOP
-      y := y + 1;
-      x := findID(y);
-    END LOOP;
-    :new.OrderID := y;
-  ELSIF :new.OrderID < 0 THEN
-    DBMS_OUTPUT.PUT_LINE('ORDERID MUST BE GREATER THAN 0');
-  END IF;
-END;
-/
+DROP SEQUENCE product_seq;
+CREATE SEQUENCE product_seq start with 1;
 
-CREATE OR REPLACE FUNCTION findID (y NUMBER)
+DROP SEQUENCE staff_seq;
+CREATE SEQUENCE staff_seq start with 1;
+
+CREATE OR REPLACE FUNCTION find_OrderID (y INTEGER)
 RETURN INTEGER
 IS
   x INTEGER;
@@ -103,13 +87,106 @@ EXCEPTION WHEN NO_DATA_FOUND THEN
 END;
 /
 
-CREATE OR REPLACE PROCEDURE Staff_Contribution (rc OUT SYS_REFCURSOR) AS
+CREATE OR REPLACE FUNCTION find_ProductID (y INTEGER)
+RETURN INTEGER
+IS
+  x INTEGER;
+BEGIN
+  SELECT ProductID
+  INTO x
+  FROM INVENTORY
+  WHERE ProductID = y;
+  RETURN x;
+EXCEPTION WHEN NO_DATA_FOUND THEN
+  RETURN NULL;
+END;
+/
 
+CREATE OR REPLACE FUNCTION find_StaffID (y INTEGER)
+RETURN INTEGER
+IS
+  x INTEGER;
+BEGIN
+  SELECT StaffID
+  INTO x
+  FROM STAFF
+  WHERE StaffID = y;
+  RETURN x;
+EXCEPTION WHEN NO_DATA_FOUND THEN
+  RETURN NULL;
+END;
+/
+
+CREATE OR REPLACE TRIGGER order_autoinc
+  BEFORE
+  INSERT
+  ON ORDERS
+  FOR EACH ROW
+DECLARE
+  y INTEGER := order_seq.nextval;
+  x INTEGER := find_OrderID(y);
+BEGIN
+  IF :new.OrderID IS NULL THEN
+    WHILE (x IS NOT NULL)
+    LOOP
+      y := y + 1;
+      x := find_OrderID(y);
+    END LOOP;
+    :new.OrderID := y;
+  ELSIF :new.OrderID < 0 THEN
+    DBMS_OUTPUT.PUT_LINE('ORDERID MUST BE GREATER THAN 0');
+  END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER product_autoinc
+  BEFORE
+  INSERT
+  ON INVENTORY
+  FOR EACH ROW
+DECLARE
+  y INTEGER := product_seq.nextval;
+  x INTEGER := find_ProductID(y);
+BEGIN
+  IF :new.ProductID IS NULL THEN
+    WHILE (x IS NOT NULL)
+    LOOP
+      y := y + 1;
+      x := find_ProductID(y);
+    END LOOP;
+    :new.ProductID := y;
+  ELSIF :new.ProductID < 0 THEN
+    DBMS_OUTPUT.PUT_LINE('ORDERID MUST BE GREATER THAN 0');
+  END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER staff_autoinc
+  BEFORE
+  INSERT
+  ON STAFF
+  FOR EACH ROW
+DECLARE
+  y INTEGER := staff_seq.nextval;
+  x INTEGER := find_StaffID(y);
+BEGIN
+  IF :new.StaffID IS NULL THEN
+    WHILE (x IS NOT NULL)
+    LOOP
+      y := y + 1;
+      x := find_StaffID(y);
+    END LOOP;
+    :new.StaffID := y;
+  ELSIF :new.StaffID < 0 THEN
+    DBMS_OUTPUT.PUT_LINE('ORDERID MUST BE GREATER THAN 0');
+  END IF;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE Staff_Contribution (rc OUT SYS_REFCURSOR) AS
   sql_s         CLOB;
   pivot_clause  CLOB;
-
 BEGIN
-
   SELECT LISTAGG(ProductID, ', ') WITHIN GROUP (ORDER BY TotalValueSold)
   INTO pivot_clause
   FROM (SELECT ProductID, TotalValueSold
@@ -119,7 +196,6 @@ BEGIN
               GROUP BY ProductID, ProductDesc
               ORDER BY TotalValueSold DESC)
         WHERE TotalValueSold >= 20000);
-
   sql_s := 'SELECT *
             FROM (SELECT FName || '' '' || LName, ProductID, ProductQuantity
                   FROM INVENTORY
@@ -128,36 +204,10 @@ BEGIN
                   NATURAL JOIN STAFF)
             PIVOT (SUM(ProductQuantity)
                    FOR ProductID IN (' || pivot_clause || '))';
-
   OPEN rc FOR sql_s;
 
 END;
 /
-
-CREATE OR REPLACE PROCEDURE yo AS
-BEGIN
-  SELECT t.*
-  FROM (SELECT *
-        FROM (SELECT StaffID, ProductID, ProductQuantity
-              FROM INVENTORY
-              NATURAL JOIN ORDER_PRODUCTS
-              NATURAL JOIN STAFF_ORDERS
-              NATURAL JOIN STAFF)
-        PIVOT (SUM(ProductQuantity)
-               FOR ProductID IN (1,2))) t
-  INNER JOIN
-       (SELECT StaffID, sum(ProductPrice * ProductQuantity) TotalValueSold
-        FROM INVENTORY
-        NATURAL JOIN ORDER_PRODUCTS
-        NATURAL JOIN STAFF_ORDERS
-        NATURAL JOIN STAFF
-        GROUP BY StaffID, ProductID
-        HAVING sum(ProductPrice * ProductQuantity) >= 20000) t2
-  ON t.StaffID = t2.StaffID
-  ORDER BY TotalValueSold DESC;
-END;
-/
-show errors;
 
 INSERT INTO STAFF (StaffID, FName, LName)
 VALUES (4, 'David', 'Ferreira');

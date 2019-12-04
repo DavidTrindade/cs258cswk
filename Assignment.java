@@ -7,7 +7,7 @@ import java.text.ParseException;
 
 class Assignment {
 
-private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MMM/yy");
+private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
 
 private static String readEntry(String prompt) {
 
@@ -401,7 +401,7 @@ public static void option5(Connection conn, String date) {
 	                               "NATURAL JOIN COLLECTIONS	 									"+
 	                               "NATURAL JOIN ORDER_PRODUCTS 								"+
 	                               "NATURAL JOIN INVENTORY						 					"+
-	                               "WHERE CollectionDate + 8 <= ?)							";
+	                               "WHERE CollectionDate + 8 <= ?							";
 
 	if (dateValidator(date)) {
 
@@ -478,6 +478,8 @@ public static void option5(Connection conn, String date) {
 				System.out.format("Order %d has been cancelled\n", orderIDs.get(i));
 
 			}
+
+			if (orderIDs.isEmpty()) System.out.println("No expired collections found");
 
 		} catch (SQLException e) {
 			System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
@@ -656,7 +658,7 @@ public static void option7(Connection conn) {
  * @param year The target year we match employee and product sales against
  */
 public static void option8(Connection conn, int year) {
-	// Incomplete - Code for option 8 goes here
+
 }
 
 public static Connection getConnection() {
@@ -703,7 +705,7 @@ public static int[] convertArrayList(ArrayList<Integer> integers) {
 
 public static void menu(Connection conn) {
 
-
+	System.out.println("\n----------------------------\n");
 
 	System.out.println("1. In-Store Purchases");
 	System.out.println("2. Collection");
@@ -712,7 +714,10 @@ public static void menu(Connection conn) {
 	System.out.println("5. Reserved Stock");
 	System.out.println("6. Staff Life-Time Success");
 	System.out.println("7. Staff Contribution");
+	System.out.println("8. Employees of the Year");
 	System.out.println("q. Exit");
+
+	System.out.println("\n----------------------------\n");
 
 	String option = readEntry("Enter your option: ");
 
@@ -744,7 +749,7 @@ public static void menu(Connection conn) {
 		} while (readEntry("Order another product? (y if yes): ").equals("y"));
 
 		do {
-			orderDate = readEntry("Enter the date sold (dd/mmm/yy): ");
+			orderDate = readEntry("Enter the date sold (dd-mmm-yy): ");
 		} while (!dateValidator(orderDate));
 
 		do {
@@ -779,11 +784,11 @@ public static void menu(Connection conn) {
 		} while (readEntry("Order another product? (y if yes): ").equals("y"));
 
 		do {
-			orderDate = readEntry("Enter the date sold (dd/mmm/yy): ");
+			orderDate = readEntry("Enter the date sold (dd-mmm-yy): ");
 		} while (!dateValidator(orderDate));
 
 		do {
-			collectionDate = readEntry("Enter the date to be collected (dd/mmm/yy): ");
+			collectionDate = readEntry("Enter the date to be collected (dd-mmm-yy): ");
 		} while (!dateValidator(collectionDate) || !afterDate(orderDate, collectionDate));
 
 		do {
@@ -826,11 +831,11 @@ public static void menu(Connection conn) {
 		} while (readEntry("Order another product? (y if yes): ").equals("y"));
 
 		do {
-			orderDate = readEntry("Enter the date sold (dd/mmm/yy): ");
+			orderDate = readEntry("Enter the date sold (dd-mmm-yy): ");
 		} while (!dateValidator(orderDate));
 
 		do {
-			deliveryDate = readEntry("Enter the date to be delivered (dd/mmm/yy): ");
+			deliveryDate = readEntry("Enter the date to be delivered (dd-mmm-yy): ");
 		} while (!dateValidator(deliveryDate) || !afterDate(orderDate, deliveryDate));
 
 		do {
@@ -872,7 +877,7 @@ public static void menu(Connection conn) {
 		String chosenDate;
 
 		do {
-			chosenDate = readEntry("Enter the date sold (dd/mmm/yy): ");
+			chosenDate = readEntry("Enter the date sold (dd-mmm-yy): ");
 		} while (!dateValidator(chosenDate));
 
 		option5(conn, chosenDate);
@@ -891,14 +896,40 @@ public static void menu(Connection conn) {
 
 		break;
 
+	case '8':
+
+		String chosenYear;
+
+		do {
+			chosenYear = readEntry("Enter the year (yyyy): ");
+		} while (!chosenYear.matches("\\d{4}"));
+
+		option8(conn, Integer.parseInt(chosenYear));
+
+		break;
+
 	case 'q':
 
 		break;
 
 	default:
+
 		System.out.println("Enter a valid option.");
-		menu(conn);
+
 	}
+
+	if (option.charAt(0) != 'q') {
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		menu(conn);
+
+	}
+
 }
 
 public static boolean dateValidator(String date) {
