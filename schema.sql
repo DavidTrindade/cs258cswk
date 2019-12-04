@@ -129,7 +129,7 @@ BEGIN
   IF :new.OrderID IS NULL THEN
     WHILE (x IS NOT NULL)
     LOOP
-      y := y + 1;
+      y := y + 100;
       x := find_OrderID(y);
     END LOOP;
     :new.OrderID := y;
@@ -151,7 +151,7 @@ BEGIN
   IF :new.ProductID IS NULL THEN
     WHILE (x IS NOT NULL)
     LOOP
-      y := y + 1;
+      y := y + 100;
       x := find_ProductID(y);
     END LOOP;
     :new.ProductID := y;
@@ -173,7 +173,7 @@ BEGIN
   IF :new.StaffID IS NULL THEN
     WHILE (x IS NOT NULL)
     LOOP
-      y := y + 1;
+      y := y + 100;
       x := find_StaffID(y);
     END LOOP;
     :new.StaffID := y;
